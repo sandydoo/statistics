@@ -1,0 +1,131 @@
+STATA CHEAT LIST
+================
+
+Info, Forum, Help - statalist.org
+
+#Directories (like unix)
+------------------------
+
+	cd - change directory
+	pwd - present working directory
+	mkdir - make directory
+
+#Opening data
+-------------
+
+	use ... - use data
+	clear - clear data
+	insheet using ...out - imports tab delim/comma delim data (downside of losing labels)
+	insheet var1 var2 var3 ... using ...out - import sheet and rename variables
+
+	import excel using ..., firstrow - import excel files
+
+
+#Save data
+----------
+
+	save, replace - save with replace/append
+	outsheet using "auto", replace - output tab delimited data
+
+#View data
+----------
+
+	browse - opens a browsing window
+	list - displays data as list in output window
+		list x in 1/500 - list observations 1-500
+		list if x >... - list x if, based on logic operators
+	describe - lists labels, variable names
+	summarize ... - summary of variable(s)
+		scalar - variables (one number)
+		r(...) - access some stats
+		return list - list of stats available
+		scalar list - lists saved scalars
+		scalar drop - drop scalar
+	count - count number of observations
+	display as text "....=" r(...) - display a string with some data (after summarize)
+	by pool: summarize x - summarize x in two groups, based on pool (requires presorting). Use bysort pool:
+	tabulate - shows number obs for each obs (For categorical vars)
+	tabstat x, stat(mean max min p95 p5) - some statistics (for continous variables)
+
+#Edit data
+----------
+
+	generate - create a variable (for each observation)
+		generate newvar=x[5] - creates new variable, each obs = 5th obs of x
+		_n - the current observation
+			x[_n+1], x[_n-1] - fwd and lagged observations
+			generate id = _n - generate id 
+	egen - extensions to generate (has max, min, mean, etc)
+	replace (if) - replace data
+	sort - sort data
+	gsort - better sort, supports descending order
+	drop - clear variables
+	keep - drop all but
+	destring .., replace
+
+
+#Logging
+--------
+
+	log using ....log - start log
+	cmdlog using .... - start logging commands only
+	log close - close log
+	view log - view log
+
+
+#Regression
+-----------
+	regress/reg - run regression (you can use if statements)
+	_b[varname] - stores coefficient of varname
+	_se[varname] - standard error
+	predict yhat, xb - fitted values (name, what to predict, x*beta)
+	predict ehat, residuals - (name, what to predict)
+
+	elasticity
+	nlcom - compute statistics + error + p value - non-linear combination
+	if marginal effect = some number and quadratic, solve for the variable, use combination here.
+	(because beta could have high std error, cannot trust)
+		ex:
+		point elasticity (at x0=mean):
+		nlcom (_b[income]*x0)/(_b[_cons] +_b[income]*x0)
+		mean elasticity:
+		_b[income]*income / yhat -> summarize
+	estat vce - var/cov matrix
+	predicted values - use display to plug values in (use _b[]	)
+
+	lincom - linear combination of vars, use level(confidence level). Note, produces two-tail test. For one-tailed, take 1/2 of p-value.
+	marginal effects - take derivative by hand and use _b[] to compute -> NOT GOOD
+		instead, use lincom with *linear combination* of derivative.
+
+#Statistical Tests
+	bysort utown: summarize price
+	ttest price, by utown
+	invttail(df, p) - where p is upper tail!
+	ttail(df, t) - returns p value (left tailed test, use 1-ttail)
+	if invttail(df, p) = t, then ttail(df, t) = p
+		ex: left tailed test
+		scalar tstat2=(_b[income]-15)/_se[income]
+		display “p-value=” 1-ttail(38,tstat2)
+	lincom (...) - linear hypothesis
+
+#Graphs
+--------
+
+	graph dir - display graphs stored in memory
+	graph display ... - display stored graph in memory
+	graph use ...- use graph stored on disk
+	spikeplot - frequency of obs of x
+	histogram
+	kdensity - density plot
+	addplot(kdensity) - adds another plot
+	dotplot, over(...) - use over two have two dotplots using dummy variable
+	scatter
+	lfit - add regression line
+	..., name(...) - name a graph (use name to call it)
+	saving(...) - save graph as file
+	combine - combine previous graphs into out graph
+
+#Do files
+---------
+
+	do - do commands
