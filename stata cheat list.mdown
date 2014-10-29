@@ -1,7 +1,7 @@
 STATA CHEAT LIST
 ================
 
-Info, Forum, Help - statalist.org
+Info, Forum, Help - (statalist.org)[http://statalist.org]
 
 #Directories (like unix)
 ------------------------
