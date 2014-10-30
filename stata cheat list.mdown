@@ -76,26 +76,11 @@ Info, Forum, Help - [statalist.org](http://statalist.org)
 #Regression
 -----------
 * `regress` or `reg` - run regression (you can use if statements)
+	* `quietly regress` - omit output
 * `_b[varname]` - stores coefficient of varname
 * `_se[varname]` - standard error
 * `predict yhat, xb` - fitted values (name, what to predict, x*beta)
 * `predict ehat, residuals` - (name, what to predict)
-
-* elasticity
-* `nlcom` - compute statistics + error + p value - non-linear combination
-* if marginal effect = some number and quadratic, solve for the variable, use combination here.
-(because beta could have high std error, cannot trust)
-	* ex:
-	* point elasticity (at x0=mean):
-	* `nlcom (_b[income]*x0)/(_b[_cons] +_b[income]*x0)`
-	* mean elasticity:
-	* `_b[income]*income / yhat` -> summarize
-* `estat vce` - var/cov matrix
-* predicted values - use display to plug values in (use `_b[]`	)
-* `cnsreg` - constrained regression, run 
-	* `constraint 1`
-	* `constraint 2`
-	* `cnsreg depvar indepvars, constraint (1 2)`
 
 #Statistical Tests
 ------------------
@@ -109,11 +94,49 @@ Info, Forum, Help - [statalist.org](http://statalist.org)
 		* `scalar tstat2=(_b[income]-15)/_se[income]`
 		* `display “p-value=” 1-ttail(38,tstat2)`
 * `lincom (...)` - linear hypothesis. linear combination of vars, use level(confidence level). Note, produces two-tail test. For one-tailed, take 1/2 of p-value.
-	* marginal effects - take derivative by hand and use `_b[]` to compute -> NOT GOOD
+	* marginal effects - take derivative by hand and use `_b[]` to compute -> NOT GOOD, coefficients are average
 	instead, use `lincom` with *linear combination* of derivative.
-* R^2 adjusted - do it by hand. adjR^2=SSE/(N-k)/SST/(N-1). `e(df_r)` returns N-k
-`test (x=0) (x2=0)` - run joint hypothesis test (or `(_b[x]=0) (_b[x2]=0))` **Make sure to regress right before**
+* indicator variables - use `gen` command. 
+	**If there is an undefined value, logical operators might incorrectly assign a 1 to that observation!**
+	`count if sqft==.` - **Check for missing values**
 
+	Elasticity
+* `nlcom` - compute statistics + error + p value - non-linear combination
+* if marginal effect = some number and quadratic, solve for the variable, use combination here.
+(because beta could have high std error, cannot trust)
+	* ex:
+	* point elasticity (at x0=mean):
+	* `nlcom (_b[income]*x0)/(_b[_cons] +_b[income]*x0)`
+	* mean elasticity:
+	* `_b[income]*income / yhat` -> summarize
+* Marginal effect of dummy with interaction:
+	* E(y|dummy=1) - E(y|dummy=0) - use `lincom` once you take difference
+	* log-linear models:
+		use `nlcom 100*(exp(_b[var])-1)` to get marginal effect
+* Average Marginal Effect:
+	1. get marginal effect and calculate mean
+	2. get mean of variable in marginal effect
+	3. run lincom
+* `estat vce` - var/cov matrix
+* predicted values - use display to plug values in (use `_b[]`	)
+* `cnsreg` - constrained regression, run 
+	* `constraint 1`
+	* `constraint 2`
+	* `cnsreg depvar indepvars, constraint (1 2)`
+* `correlate` - show corr matrix
+
+**Goodness of Fit**
+	* R^2 adjusted - do it by hand. adjR^2=SSE/(N-k)/SST/(N-1). `e(df_r)` returns N-k
+	* `test (x=0) (x2=0)` - run joint hypothesis test (or `(_b[x]=0) (_b[x2]=0))` **Make sure to regress right before**
+		__Nice to use to look for multicollinearity__
+	* Akaike Information Criterion(AIC) - goodness of fit + penalty
+		* `scalar aic=ln(e(rss)/e(N))+2*e(rank)`
+			__stata uses a likelihood estimation__
+	* Bayesian Information Criterion(BIC) - goodness of fit + penalty
+		* `scalar bic=ln(e(rss)/e(N))+e(rank)*ln(e(N))/e(N)`
+			__stata uses a likelihood estimation__
+	* `estimates store model3` - store the ouput of your program or a regression
+	* `estimates table model1 model2 model3 model4, b(%9.3f) stfmt(%9.3f) se stats(N r2 r2_a aic bic)` - output table for stored estimates. `b(__format__)` used for number formatting. `stfmt` is for scalar formatting.
 
 #Graphs
 --------
@@ -136,3 +159,15 @@ Info, Forum, Help - [statalist.org](http://statalist.org)
 ---------
 
 * `do` - do commands
+
+#Functions (Programs)
+---------------------
+
+* `program [name] ... end` - store a program for reuse
+
+
+
+
+
+
+sqft + inter - sqft
