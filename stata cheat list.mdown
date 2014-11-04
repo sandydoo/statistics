@@ -3,12 +3,12 @@ STATA CHEAT LIST
 
 Info, Forum, Help - [statalist.org](http://statalist.org)
 
-#Directories (like unix)
-------------------------
+# Directories (like unix)
+	------------------------
 
-* `cd` - change directory
-* `pwd` - present working directory
-* `mkdir` - make directory
+	* `cd` - change directory
+	* `pwd` - present working directory
+	* `mkdir` - make directory
 
 #Opening data
 -------------
@@ -43,9 +43,14 @@ Info, Forum, Help - [statalist.org](http://statalist.org)
 	* `scalar drop` - drop scalar
 * `count` - count number of observations
 * `display as text "....=" r(...)` - display a string with some data (after summarize)
-* `by pool: summarize x` - summarize x in two groups, based on pool (requires presorting). Use bysort pool:
+* `by pool: summarize x` - summarize x in two groups, based on pool (requires presorting)Use bysort pool:
 * `tabulate` - shows number obs for each obs (For categorical vars)
 * `tabstat x, stat(mean max min p95 p5)` - some statistics (for continous variables)
+* `collapse` - summarize data
+	Example
+	* `(mean) meanheight=height (count) n=height (mediam) medianheight=height, by gendum`
+	(statistics) name = [var to calculate statistic on]
+	**overwrites the data**
 
 #Edit data
 ----------
@@ -62,7 +67,15 @@ Info, Forum, Help - [statalist.org](http://statalist.org)
 * `drop` - clear variables
 * `keep` - drop all but
 * `destring ..., replace` - convert to float 
-
+* `format` - format data
+	* `%12.2g` - up to two decimals, but rounds off
+	* `%12.2f` - fixed to two decimals
+	* `%12.2e` - exponential
+* Labels:
+	* `label define [call it smth] 0 "Female" 1 "Male"` - define a label to label __Female__ if value is 0
+	* `label values [variable] (label)` - assign label to values
+* Merging data:
+	* `merge 1:1 make using (directory)` - merge current master data sheet with the data sheet mentioned. Creates _merge column that mentions which varibles were matched or taked from master sheet.
 
 #Logging
 --------
@@ -77,6 +90,7 @@ Info, Forum, Help - [statalist.org](http://statalist.org)
 -----------
 * `regress` or `reg` - run regression (you can use if statements)
 	* `quietly regress` - omit output
+	* `bysort [dummy]: reg [var1] [var2]` - run two regressions for dummy
 * `_b[varname]` - stores coefficient of varname
 * `_se[varname]` - standard error
 * `predict yhat, xb` - fitted values (name, what to predict, x*beta)
@@ -128,7 +142,7 @@ Info, Forum, Help - [statalist.org](http://statalist.org)
 **Goodness of Fit**
 	* R^2 adjusted - do it by hand. adjR^2=SSE/(N-k)/SST/(N-1). `e(df_r)` returns N-k
 	* `test (x=0) (x2=0)` - run joint hypothesis test (or `(_b[x]=0) (_b[x2]=0))` **Make sure to regress right before**
-		__Nice to use to look for multicollinearity__
+	__Nice to use to look for multicollinearity__
 	* Akaike Information Criterion(AIC) - goodness of fit + penalty
 		* `scalar aic=ln(e(rss)/e(N))+2*e(rank)`
 			__stata uses a likelihood estimation__
@@ -164,10 +178,3 @@ Info, Forum, Help - [statalist.org](http://statalist.org)
 ---------------------
 
 * `program [name] ... end` - store a program for reuse
-
-
-
-
-
-
-sqft + inter - sqft
