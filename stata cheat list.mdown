@@ -4,31 +4,26 @@ STATA CHEAT LIST
 Info, Forum, Help - [statalist.org](http://statalist.org)
 
 # Directories (like unix)
-	------------------------
 
-	* `cd` - change directory
-	* `pwd` - present working directory
-	* `mkdir` - make directory
+* `cd` - change directory
+* `pwd` - present working directory
+* `mkdir` - make directory
 
-#Opening data
--------------
+# Opening data
 
 * `use ...` - use data
 * `clear` - clear data
 * `insheet using ...out` - imports tab delim/comma delim data (downside of losing labels)
 * `insheet var1 var2 var3 ... using ...out` - import sheet and rename variables
 
-* `import excel using ..., firstrow` - import excel files
+* `import excel using ..., firstrow` - import excel files.
 
 
-#Save data
-----------
-
+# Save data
 * `save, replace` - save with replace/append
 * `outsheet using "auto", replace` - output tab delimited data
 
-#View data
-----------
+# View data
 
 *	`browse` - opens a browsing window
 *	`list` - displays data as list in output window
@@ -52,8 +47,7 @@ Info, Forum, Help - [statalist.org](http://statalist.org)
 	(statistics) name = [var to calculate statistic on]
 	**overwrites the data**
 
-#Edit data
-----------
+# Edit data
 
 * `generate` - create a variable (for each observation)
 	* `generate newvar=x[5]` - creates new variable, each obs = 5th obs of x
@@ -61,6 +55,7 @@ Info, Forum, Help - [statalist.org](http://statalist.org)
 	*	`x[_n+1], x[_n-1]` - fwd and lagged observations
 	*	`generate id = _n` - generate id 
 * `egen` - extensions to generate (has max, min, mean, etc)
+* `global x1list [$name] [vars] - create a list of variables
 * `replace (if)` - replace data
 * `sort` - sort data
 * `gsort` - better sort, supports descending order
@@ -71,33 +66,47 @@ Info, Forum, Help - [statalist.org](http://statalist.org)
 	* `%12.2g` - up to two decimals, but rounds off
 	* `%12.2f` - fixed to two decimals
 	* `%12.2e` - exponential
+* rename [var] [newname] - rename variables
 * Labels:
 	* `label define [call it smth] 0 "Female" 1 "Male"` - define a label to label __Female__ if value is 0
 	* `label values [variable] (label)` - assign label to values
 * Merging data:
 	* `merge 1:1 make using (directory)` - merge current master data sheet with the data sheet mentioned. Creates _merge column that mentions which varibles were matched or taked from master sheet.
+* `tabulate [var], gen[newvar] - generates new variable for each new obs of var
 
-#Logging
---------
+# Logging
 
 * `log using ...log` - start log
 * `cmdlog using ....` - start logging commands only
 * `log close` - close log
 * `view log` - view log
 
+# Regression
 
-#Regression
------------
 * `regress` or `reg` - run regression (you can use if statements)
 	* `quietly regress` - omit output
-	* `bysort [dummy]: reg [var1] [var2]` - run two regressions for dummy
+	* `bysort [dummy]: reg [var1] [var2]` - run two regressions by dummy variable
+	* `areg [vars] , absorb[dvar]` - runs regression, creating dummy variables for each observation of dvar and suppressed the output of the dummies. *If using global vars, use space after the var name!*
+	* `if !missing(demp)` - ignore if we don't have pairwise observations. ex: before and after a treatment
+
+	## Heteroskedasticity
+	* `vce(robust)` - use robust standard errors for heteroskedasticity-robust estimators
+	###Generalized Least Squares
+	* `[aweight=1/income]` - run Generalized Least Squares using specified weight. *Requires knowledge or assumption of nature of variance. ex: food expenditure variance depends on income
+	* ### Feasible GLS `σi2 = exp(a1+a2z2i+...+apzpi)`
+		* `predict ehat, residual` - get residuals
+			`gen lnehat2=log(ehat*ehat)` - estimate variance (ln(e^2)=ln(σ^2))
+			`reg lnehat2 income` - run estimate
+			`predict lnsig2,xb` - get fitted values
+			`gen wt=exp(lnsig2)` - compute weights as exponent of weights
+			`regress ... [aweight=1/wt]` - run Feasible GLS
 * `_b[varname]` - stores coefficient of varname
 * `_se[varname]` - standard error
 * `predict yhat, xb` - fitted values (name, what to predict, x*beta)
 * `predict ehat, residuals` - (name, what to predict)
+* `gen ehat, res` - save residuals after regression
 
-#Statistical Tests
-------------------
+# Statistical Tests
 
 * `bysort utown: summarize price`
 * `ttest price, by utown`
@@ -114,7 +123,7 @@ Info, Forum, Help - [statalist.org](http://statalist.org)
 	**If there is an undefined value, logical operators might incorrectly assign a 1 to that observation!**
 	`count if sqft==.` - **Check for missing values**
 
-	Elasticity
+## Elasticity
 * `nlcom` - compute statistics + error + p value - non-linear combination
 * if marginal effect = some number and quadratic, solve for the variable, use combination here.
 (because beta could have high std error, cannot trust)
@@ -138,22 +147,30 @@ Info, Forum, Help - [statalist.org](http://statalist.org)
 	* `constraint 2`
 	* `cnsreg depvar indepvars, constraint (1 2)`
 * `correlate` - show corr matrix
+* `pwcorr` - pairwise correlation
 
-**Goodness of Fit**
-	* R^2 adjusted - do it by hand. adjR^2=SSE/(N-k)/SST/(N-1). `e(df_r)` returns N-k
-	* `test (x=0) (x2=0)` - run joint hypothesis test (or `(_b[x]=0) (_b[x2]=0))` **Make sure to regress right before**
-	__Nice to use to look for multicollinearity__
-	* Akaike Information Criterion(AIC) - goodness of fit + penalty
-		* `scalar aic=ln(e(rss)/e(N))+2*e(rank)`
-			__stata uses a likelihood estimation__
-	* Bayesian Information Criterion(BIC) - goodness of fit + penalty
-		* `scalar bic=ln(e(rss)/e(N))+e(rank)*ln(e(N))/e(N)`
-			__stata uses a likelihood estimation__
-	* `estimates store model3` - store the ouput of your program or a regression
-	* `estimates table model1 model2 model3 model4, b(%9.3f) stfmt(%9.3f) se stats(N r2 r2_a aic bic)` - output table for stored estimates. `b(__format__)` used for number formatting. `stfmt` is for scalar formatting.
+## Goodness of Fit
+* R^2 adjusted - do it by hand. adjR^2=SSE/(N-k)/SST/(N-1). `e(df_r)` returns N-k
+* `test (x=0) (x2=0)` - run joint hypothesis test (or `(_b[x]=0) (_b[x2]=0))` **Make sure to regress right before**
+__Nice to use to look for multicollinearity__
+* Akaike Information Criterion(AIC) - goodness of fit + penalty
+	* `scalar aic=ln(e(rss)/e(N))+2*e(rank)`
+		__stata uses a likelihood estimation__
+* Bayesian Information Criterion(BIC) - goodness of fit + penalty
+	* `scalar bic=ln(e(rss)/e(N))+e(rank)*ln(e(N))/e(N)`
+		__stata uses a likelihood estimation__
+* `estimates store model3` - store the ouput of your program or a regression
+* `estimates table model1 model2 model3 model4, b(%9.3f) stfmt(%9.3f) se stats(N r2 r2_a aic bic)` - output table for stored estimates. `b(__format__)` used for number formatting. `stfmt` is for scalar formatting.
 
-#Graphs
---------
+## Heteroskedasticity
+* `estat hettest [var], iid` - perform a Breusch-Pagan test for heteroskedasticity (makes assumptions about type of heteroskedasticity?)
+* `estat imtest, white` - perform a White test for heteroskedasticity
+### Goldfeld-Quandt Test
+	* 
+
+
+
+# Graphs
 
 * `graph dir` - display graphs stored in memory
 * `graph display ...` - display stored graph in memory
@@ -163,18 +180,17 @@ Info, Forum, Help - [statalist.org](http://statalist.org)
 * `kdensity` - density plot
 * `addplot(kdensity)` - adds another plot
 * `dotplot, over(...)` - use over two have two dotplots using dummy variable
-* `scatter`
+* `scatter` - scatter plot
+	* `(twoway var1 var2) (lowess var1 var2, lw(thick))` - twoway scatter with smooth lowess curve
 * `lfit` - add regression line
 * `..., name(...)` - name a graph (use name to call it)
 * `saving(...)` - save graph as file
 * `combine` - combine previous graphs into out graph
 
-#Do files
----------
+# Do files
 
 * `do` - do commands
 
-#Functions (Programs)
----------------------
+# Functions (Programs)
 
 * `program [name] ... end` - store a program for reuse
